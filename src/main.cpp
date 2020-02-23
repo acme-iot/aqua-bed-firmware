@@ -23,8 +23,8 @@ extern "C" {
 char ssid[] = SECRET_SSID;
 char password[] = SECRET_PASSWORD;
 
-#define MQTT_HOST IPAddress(192, 168, 1, 10)
 #define MQTT_PORT 1883
+#define MQTT_HOST IPAddress(192, 168, 11, 137)
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -77,6 +77,7 @@ void onMqttConnect(bool sessionPresent) {
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println("Disconnected from MQTT.");
+  Serial.println((uint8_t)reason);
 
   if (WiFi.isConnected()) {
     xTimerStart(mqttReconnectTimer, 0);
