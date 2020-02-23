@@ -20,8 +20,8 @@ extern "C" {
 #include "secrets.h"
 
 
-#define WIFI_SSID SSID
-#define WIFI_PASSWORD WIFI_PASSWORD
+char ssid[] = SECRET_SSID;
+char password[] = SECRET_PASSWORD;
 
 #define MQTT_HOST IPAddress(192, 168, 1, 10)
 #define MQTT_PORT 1883
@@ -33,7 +33,7 @@ TimerHandle_t wifiReconnectTimer;
 
 void connectToWifi() {
   Serial.println("Connecting to Wi-Fi...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(ssid, password);
 }
 
 void connectToMqtt() {
