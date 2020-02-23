@@ -1,0 +1,1 @@
+[![Build Status](https://travis-ci.org/acme-iot/aqua-bed-firmware.svg)](https://travis-ci.org/acme-iot/aqua-bed-firmware)
