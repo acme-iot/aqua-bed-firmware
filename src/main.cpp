@@ -9,6 +9,13 @@
 #include <ESP8266WiFi.h>
 #endif
 
+#ifndef CI
+#include "secrets.h"
+#else
+#define SECRET_SSID "SSID"
+#define SECRET_PASSWORD "password1234"
+#endif
+
 
 extern "C" {
 	#include "freertos/FreeRTOS.h"
@@ -16,8 +23,6 @@ extern "C" {
 }
 
 #include <AsyncMqttClient.h>
-
-#include "secrets.h"
 
 
 char ssid[] = SECRET_SSID;
