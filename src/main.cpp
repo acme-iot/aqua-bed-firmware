@@ -14,6 +14,8 @@
 #else
 #define SECRET_SSID "SSID"
 #define SECRET_PASSWORD "password1234"
+#define SECRET_MQTT_USERNAME "admin"
+#define SECRET_MQTT_PASSWORD "password1234"
 #endif
 
 
@@ -25,11 +27,13 @@ extern "C" {
 #include <AsyncMqttClient.h>
 
 
-char ssid[] = SECRET_SSID;
-char password[] = SECRET_PASSWORD;
+const char* ssid = SECRET_SSID;
+const char* password = SECRET_PASSWORD;
+const char* mqtt_username = SECRET_MQTT_USERNAME;
+const char* mqtt_password = SECRET_MQTT_PASSWORD;
 
 #define MQTT_PORT 1883
-#define MQTT_HOST IPAddress(5, 196, 95, 208)
+#define MQTT_HOST IPAddress(54, 191, 223, 130)//54.191.223.130
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -148,6 +152,7 @@ void setup() {
   mqttClient.onMessage(onMqttMessage);
   mqttClient.onPublish(onMqttPublish);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  mqttClient.setCredentials(mqtt_username, mqtt_password);
 
   connectToWifi();
 }
