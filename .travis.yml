@@ -12,4 +12,4 @@ install:
     - pio update
 
 script:
-    - pio run
+    - pio run -e planter-debug
