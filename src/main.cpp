@@ -17,11 +17,11 @@ extern "C" {
 
 #include <AsyncMqttClient.h>
 
-//#include "secrets.h"
+#include "secrets.h"
 
 
-#define WIFI_SSID "yourSSID"
-#define WIFI_PASSWORD "yourpass"
+#define WIFI_SSID SSID
+#define WIFI_PASSWORD WIFI_PASSWORD
 
 #define MQTT_HOST IPAddress(192, 168, 1, 10)
 #define MQTT_PORT 1883
