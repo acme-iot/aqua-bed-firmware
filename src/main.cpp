@@ -24,7 +24,7 @@ char ssid[] = SECRET_SSID;
 char password[] = SECRET_PASSWORD;
 
 #define MQTT_PORT 1883
-#define MQTT_HOST IPAddress(192, 168, 11, 137)
+#define MQTT_HOST IPAddress(5, 196, 95, 208)
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -53,7 +53,7 @@ void WiFiEvent(WiFiEvent_t event) {
     case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println("WiFi lost connection");
         xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
-		xTimerStart(wifiReconnectTimer, 0);
+		    xTimerStart(wifiReconnectTimer, 0);
         break;
     }
 }
@@ -77,7 +77,6 @@ void onMqttConnect(bool sessionPresent) {
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println("Disconnected from MQTT.");
-  Serial.println((uint8_t)reason);
 
   if (WiFi.isConnected()) {
     xTimerStart(mqttReconnectTimer, 0);
@@ -114,6 +113,8 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   Serial.println(index);
   Serial.print("  total: ");
   Serial.println(total);
+  Serial.print("  payload: ");
+  Serial.println(payload);
 }
 
 void onMqttPublish(uint16_t packetId) {
@@ -126,6 +127,9 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   Serial.println();
+
+  Serial.print("MAC ");
+  Serial.println(WiFi.macAddress());
 
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
@@ -144,6 +148,4 @@ void setup() {
 }
 
 void loop() {
-  delay(2000);
-  Serial.print(".");
 }
