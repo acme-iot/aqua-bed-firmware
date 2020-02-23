@@ -33,7 +33,7 @@ const char* mqtt_username = SECRET_MQTT_USERNAME;
 const char* mqtt_password = SECRET_MQTT_PASSWORD;
 
 #define MQTT_PORT 1883
-#define MQTT_HOST IPAddress(52, 38, 240, 98)//52.38.240.98
+#define MQTT_HOST IPAddress(52, 38, 240, 98)
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
@@ -152,7 +152,7 @@ void setup() {
   mqttClient.onMessage(onMqttMessage);
   mqttClient.onPublish(onMqttPublish);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  //mqttClient.setCredentials(mqtt_username, mqtt_password);
+  mqttClient.setCredentials(mqtt_username, mqtt_password);
 
   connectToWifi();
 }
