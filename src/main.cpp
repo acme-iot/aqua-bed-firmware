@@ -9,7 +9,7 @@
 #include <ESP8266WiFi.h>
 #endif
 
-#ifndef CI
+#ifndef CI_BUILD
 #include "secrets.h"
 #else
 #define SECRET_SSID "SSID"
