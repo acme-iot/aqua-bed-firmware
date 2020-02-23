@@ -33,7 +33,7 @@ const char* mqtt_username = SECRET_MQTT_USERNAME;
 const char* mqtt_password = SECRET_MQTT_PASSWORD;
 
 #define MQTT_PORT 1883
-#define MQTT_HOST IPAddress(52, 38, 240, 98)
+#define MQTT_HOST IPAddress(54, 70, 96, 251)
 
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimer;
