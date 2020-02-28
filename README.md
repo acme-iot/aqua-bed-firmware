@@ -33,3 +33,6 @@
 
 ## Notes
 This project doesn't need VSCode or the PlatformIO extension in VSCode. If you look closely at the commands executed, all that is needed is PlatformIO Core and the included CLI.
+
+### Testing MQTT
+Once the board is flashed it will run and connect to the MQTT broker. The board will subscribe to `test/lol` as well as publish to this topic. To test the board's subscritpion make sure **mosquitto** is installed `brew install mosquitto` then run from the terminal `mosquitto_pub -t 'test/topic' -m 'helloWorld' -h <IP OF BROKER>`. The board should receive the payload `Helloworld`
