@@ -5,6 +5,18 @@
 
 #ifdef ESP32
 #include <WiFi.h>
+#include <WiFiType.h>
+
+#include <Arduino.h>
+//#include <Hash.h>
+#include <FS.h>
+
+//#include "wifi.h"
+#include <conf.h>
+#include <mqtt.h>
+//#include <jsoninfo.h>
+#include <webapi.h>
+
 #else
 #include <ESP8266WiFi.h>
 #endif
@@ -26,6 +38,7 @@ extern "C" {
 
 #include <AsyncMqttClient.h>
 
+Config *g_cfg;
 
 const char* ssid = SECRET_SSID;
 const char* password = SECRET_PASSWORD;
@@ -107,6 +120,8 @@ void onMqttUnsubscribe(uint16_t packetId) {
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  digitalWrite(LED_BUILTIN, HIGH);
+
   Serial.println("Publish received.");
   Serial.print("  topic: ");
   Serial.println(topic);
@@ -137,6 +152,8 @@ void setup() {
   Serial.println();
   Serial.println();
 
+  pinMode(LED_BUILTIN, OUTPUT);
+
   Serial.print("MAC ");
   Serial.println(WiFi.macAddress());
 
@@ -158,4 +175,6 @@ void setup() {
 }
 
 void loop() {
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
 }
