@@ -48,7 +48,7 @@ currently it is, toolchain-gccarmnoneeabi-darwin_x86_64-1.90201.191206.tar.gz, t
 ```
 [esp32]
 platform_packages =
-    toolchain-gccarmnoneeabi @ https://dl.bintray.com/platformio/dl-packages/toolchain-gccarmnoneeabi-darwin_x86_64-1.90201.191206.tar.gz
+    toolchain-xtensa32 @ 2.80200.200226
     framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32.git
 ```
 
