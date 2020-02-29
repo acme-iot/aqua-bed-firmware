@@ -1,13 +1,13 @@
 #ifndef ESP_LIB_CONFIG_H
 #define ESP_LIB_CONFIG_H
 
-#include "spiffs.h"
+#include "SPIFFSAccess.h"
 #include "ArduinoJson.h"
+#include <ArduinoLog.h>
 
-#define config_filename "/spiffs/config.json"
 #define config_default_json "{\"unit\":{\"name\":\"SHTech-R\"},\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{},\"plugins\":[]}"
 
-
+const char * config_filename = "/spiffs/config.json";
 
 class Config
 {
@@ -15,22 +15,25 @@ class Config
         //StaticJsonBuffer<20000> jsonBuffer;
         StaticJsonDocument<20000> jsonBuffer;
         JsonObject /* * */ configuration;
+        SPIFFSAccess spiffs;
 
     public:
         Config() {
             loadConfig();
         }
         void loadConfig() {
-             ESP_LOGI("CONF", "loading config object");
-            char* confData = read_file((char*)config_filename);
+            Log.trace(F("loadConfig() :: %s"), config_filename);
+            String confData = spiffs.read_file(config_filename);
             if (confData == NULL) {
-                ESP_LOGI("CONF", "warning: config file not found, creating new!");
-                write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
-                confData = read_file((char*)config_filename);
+                //write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
+                //confData = read_file((char*)config_filename);
             }
-            ESP_LOGI("CONF", "Parsing JSON object");
             //JsonObject& ref = jsonBuffer.parseObject(confData);
-            deserializeJson(jsonBuffer, confData);
+            
+            
+            //deserializeJson(jsonBuffer, confData);
+
+            
             //configuration = &ref;
         }
         JsonObject& getConfig() {

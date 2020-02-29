@@ -16,6 +16,8 @@
 #include <mqtt.h>
 //#include <jsoninfo.h>
 #include <webapi.h>
+#include <SPIFFSAccess.h>
+
 
 #else
 #include <ESP8266WiFi.h>
@@ -36,9 +38,19 @@ extern "C" {
 	#include "freertos/timers.h"
 }
 
+#include <ArduinoLog.h>
 #include <AsyncMqttClient.h>
 
+
+#ifdef RELEASE
+#define LOG_LEVEL LOG_LEVEL_SILENT
+#else
+#define LOG_LEVEL LOG_LEVEL_VERBOSE
+#endif
+
+
 Config *g_cfg;
+SPIFFSAccess *g_file;
 
 const char* ssid = SECRET_SSID;
 const char* password = SECRET_PASSWORD;
@@ -71,6 +83,7 @@ void WiFiEvent(WiFiEvent_t event) {
         Serial.println("IP address: ");
         Serial.println(WiFi.localIP());
         connectToMqtt();
+        //Serial.println(g_cfg->getConfig());
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println("WiFi lost connection");
@@ -147,15 +160,37 @@ void onMqttPublish(uint16_t packetId) {
   Serial.println(packetId);
 }
 
-void setup() {
+void setupDebugging() {
+  Serial.setDebugOutput(true);
+  //esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+}
+
+void setupLogging() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println();
+  while(!Serial && !Serial.available()){}
+  Log.begin(LOG_LEVEL, &Serial);
+}
+
+void setupFileSystem() {
+  g_file->begin();
+}
+
+
+void setup() {
+  setupDebugging();
+  setupLogging();
+  setupFileSystem();
+
+  Log.notice("Running...");
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  Serial.print("MAC ");
-  Serial.println(WiFi.macAddress());
+  Log.trace("MAC: %x", WiFi.macAddress());
+
+  g_cfg->loadConfig();
+
+  return;
 
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
