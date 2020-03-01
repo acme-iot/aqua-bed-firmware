@@ -1,6 +1,9 @@
 /*
  * Aquaponic planter firmware
  */
+#include <ctime>
+#include <chrono>
+
 
 
 #ifdef ESP32
@@ -183,6 +186,17 @@ void setup() {
   setupFileSystem();
 
   Log.notice("Running...");
+
+  auto getFormattedTime = []() {
+    auto currentTimePoint = std::chrono::system_clock::now();
+    auto currentTime = std::chrono::system_clock::to_time_t( currentTimePoint );
+    return ctime( &currentTime );
+  };
+
+  for(;;){
+    delay(1000);
+    Log.trace("Time: %s", getFormattedTime());
+  }
 
   pinMode(LED_BUILTIN, OUTPUT);
 
