@@ -1,10 +1,32 @@
 /*
  * Aquaponic planter firmware
  */
+#include <ctime>
+#include <chrono>
+
+#include <TimeLib.h>
+
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+
 
 
 #ifdef ESP32
 #include <WiFi.h>
+#include <WiFiType.h>
+
+#include <Arduino.h>
+//#include <Hash.h>
+#include <FS.h>
+
+//#include "wifi.h"
+#include <conf.h>
+#include <mqtt.h>
+//#include <jsoninfo.h>
+#include <webapi.h>
+#include <SPIFFSAccess.h>
+
+
 #else
 #include <ESP8266WiFi.h>
 #endif
@@ -24,8 +46,19 @@ extern "C" {
 	#include "freertos/timers.h"
 }
 
+#include <ArduinoLog.h>
 #include <AsyncMqttClient.h>
 
+
+#ifdef RELEASE
+#define LOG_LEVEL LOG_LEVEL_SILENT
+#else
+#define LOG_LEVEL LOG_LEVEL_VERBOSE
+#endif
+
+
+Config *g_cfg;
+SPIFFSAccess *g_file;
 
 const char* ssid = SECRET_SSID;
 const char* password = SECRET_PASSWORD;
@@ -58,6 +91,7 @@ void WiFiEvent(WiFiEvent_t event) {
         Serial.println("IP address: ");
         Serial.println(WiFi.localIP());
         connectToMqtt();
+        //Serial.println(g_cfg->getConfig());
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println("WiFi lost connection");
@@ -107,6 +141,8 @@ void onMqttUnsubscribe(uint16_t packetId) {
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  digitalWrite(LED_BUILTIN, HIGH);
+
   Serial.println("Publish received.");
   Serial.print("  topic: ");
   Serial.println(topic);
@@ -132,13 +168,48 @@ void onMqttPublish(uint16_t packetId) {
   Serial.println(packetId);
 }
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println();
+void setupDebugging() {
+  Serial.setDebugOutput(true);
+  //esp_log_level_set("*", ESP_LOG_VERBOSE);
 
-  Serial.print("MAC ");
-  Serial.println(WiFi.macAddress());
+}
+
+void setupLogging() {
+  Serial.begin(115200);
+  while(!Serial && !Serial.available()){}
+  Log.begin(LOG_LEVEL, &Serial);
+}
+
+void setupFileSystem() {
+  g_file->begin();
+}
+
+
+void setup() {
+  setupDebugging();
+  setupLogging();
+  setupFileSystem();
+
+  Log.notice("Running...");
+
+  auto getFormattedTime = []() {
+    auto currentTimePoint = std::chrono::system_clock::now();
+    auto currentTime = std::chrono::system_clock::to_time_t( currentTimePoint );
+    return ctime( &currentTime );
+  };
+
+  for(;;){
+    delay(1000);
+    Log.trace("Time: %s", getFormattedTime());
+  }
+
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  Log.trace("MAC: %x", WiFi.macAddress());
+
+  g_cfg->loadConfig();
+
+  return;
 
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
@@ -158,4 +229,6 @@ void setup() {
 }
 
 void loop() {
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
 }

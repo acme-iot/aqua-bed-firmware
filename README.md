@@ -36,3 +36,32 @@ This project doesn't need VSCode or the PlatformIO extension in VSCode. If you l
 
 ### Testing MQTT
 Once the board is flashed it will run and connect to the MQTT broker. The board will subscribe to `test/lol` as well as publish to this topic. To test the board's subscritpion make sure **mosquitto** is installed `brew install mosquitto` then run from the terminal `mosquitto_pub -t 'test/topic' -m 'helloWorld' -h <IP OF BROKER>`. The board should receive the payload `Helloworld`
+
+### Updating the toolchain
+
+1. Update PIO, `pio upgrade --dev`
+
+2. Find the latest PIO GCC ARM toolchain for Mac here, https://dl.bintray.com/platformio/dl-packages/
+currently it is, toolchain-gccarmnoneeabi-darwin_x86_64-1.90201.191206.tar.gz, then add it to `platform_packages`
+
+3. add a platform_packages reference in plaformio.ini
+```
+[esp32]
+platform_packages =
+    toolchain-xtensa32 @ 2.80200.200226
+    framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32.git
+```
+
+4. then have the environment definition reference this
+```
+[env:planter]
+board = esp32doit-devkit-v1
+framework = arduino
+platform = espressif32
+platform_packages =
+    ${esp32.platform_packages}
+```
+
+##### stuck?
+- https://community.platformio.org/t/how-to-install-a-newer-toolchain-than-the-official-one/8238
+- https://community.platformio.org/t/can-not-compile-arm-none-eabi-g-command-not-found/9458/14
