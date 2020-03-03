@@ -4,6 +4,11 @@
 #include <ctime>
 #include <chrono>
 
+#include <TimeLib.h>
+
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+
 
 
 #ifdef ESP32
