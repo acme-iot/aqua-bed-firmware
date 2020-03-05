@@ -21,6 +21,7 @@ void SPIFFSAccess::begin() {
         Serial.println("SPIFFS Mount Failed");
         return;
     }
+    Serial.println("SPIFFS Mounted");
 }
 
 void SPIFFSAccess::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
