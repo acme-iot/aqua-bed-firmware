@@ -1,12 +1,9 @@
 /*
  * Aquaponic planter firmware
  */
-#include <chrono>  // chrono::system_clock
-#include <ctime>   // localtime
-//#include <sstream> // stringstream
-//#include <iomanip> // put_time
-#include <string>  // string
-//#include <time.h>
+#include <chrono>
+#include <ctime>
+#include <string>
 
 #include <cassert>
 
@@ -235,13 +232,6 @@ void setup()
 
   Log.notice("Running...");
 
-  for (;;)
-  {
-    Log.trace("In Loop");
-    delay(1000);
-    break;
-  }
-
   timeTimer = xTimerCreate("timeTimer", pdMS_TO_TICKS(5 * 1000), pdTRUE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(syncTimeCallback));
 
   if (xTimerStart(timeTimer, 0) != pdPASS)
@@ -254,6 +244,31 @@ void setup()
   Log.trace("MAC: %x", WiFi.macAddress());
 
   g_cfg->loadConfig();
+
+  // FILE
+  File file = SPIFFS.open("/config.json", FILE_WRITE);
+
+  if (!file)
+  {
+    Log.error("There was an error opening the file for writing");
+    return;
+  }
+
+  if (file.print("TEST"))
+  {
+    Log.trace("File was written");
+  }
+  else
+  {
+    Log.error("File write failed");
+  }
+
+  file.close();
+
+  file = SPIFFS.open("/config.json", FILE_READ);
+  Log.verbose("config.json %s", file.readString());
+  file.close();
+  // END FILE
 
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));

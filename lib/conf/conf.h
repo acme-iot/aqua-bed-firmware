@@ -7,7 +7,7 @@
 
 #define config_default_json "{\"unit\":{\"name\":\"SHTech-R\"},\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{},\"plugins\":[]}"
 
-const char * config_filename = "/spiffs/config.json";
+const char * config_filename = "/spiffs/config.ini";
 
 class Config
 {
@@ -24,6 +24,7 @@ class Config
         void loadConfig() {
             Log.trace(F("loadConfig() :: %s"), config_filename);
             String confData = spiffs.read_file(config_filename);
+
             if (confData == NULL) {
                 //write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
                 //confData = read_file((char*)config_filename);
