@@ -4,7 +4,7 @@
 #include <aquabotics_defines.h>
 
 #include <FileSystem.h>
-#include "Configuration.h"
+#include <Configuration.h>
 
 #include <chrono>
 #include <ctime>
@@ -260,7 +260,7 @@ void setup() {
 
   // FILESYSTEM
 
-  Configuration cfg{};
+  aquabotics::Configuration cfg{};
 
 
   // END FILESYSTEM
