@@ -75,3 +75,9 @@ This may not work on certain boards.
 
 1. Add all files to upload into `data` folder
 2. then run `pio run -t uploadfs`
+
+### IDEs
+
+##### CLion
+
+https://docs.platformio.org/en/latest/ide/clion.html

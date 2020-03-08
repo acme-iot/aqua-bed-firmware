@@ -6,9 +6,9 @@
 #include <ArduinoLog.h>
 
 
-#define config_default_json "{\"unit\":{\"name\":\"SHTech-R\"},\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{},\"plugins\":[]}"
+//#define config_default_json "{\"unit\":{\"name\":\"SHTech-R\"},\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{},\"plugins\":[]}"
 
-const char * config_filename = "/fs/config.ini";
+//const char * config_filename = "/fs/config.ini";
 
 class Config
 {
@@ -24,13 +24,13 @@ class Config
             loadConfig();
         }
         void loadConfig() {
-            Log.trace(F("loadConfig() :: %s"), config_filename);
-            String confData = fs.read_file(config_filename);
+            //Log.trace(F("loadConfig() :: %s"), config_filename);
+            //String confData = fs.read_file(config_filename);
 
-            if (confData == NULL) {
+            //if (confData == NULL) {
                 //write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
                 //confData = read_file((char*)config_filename);
-            }
+            //}
             //JsonObject& ref = jsonBuffer.parseObject(confData);
             
             
