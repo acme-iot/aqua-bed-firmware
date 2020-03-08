@@ -9,8 +9,6 @@
 
 AQUABOTICS_BEGIN_NAMESPACE
 
-const char * config_filename = "/fs/config.ini";
-
 class Configuration
 {
     private:

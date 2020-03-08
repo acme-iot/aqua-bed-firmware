@@ -23,7 +23,7 @@
 //#include <FS.h>
 
 //#include "wifi.h"
-#include <conf.h>
+//#include <conf.h>
 #include <mqtt.h>
 //#include <jsoninfo.h>
 //#include <webapi.h>
@@ -59,7 +59,7 @@ extern "C"
 
 const int BaudRate = 115200;
 
-Config *g_cfg;
+//Config *g_cfg;
 aquabotics::FileSystem *g_file;
 
 const char *ssid = SECRET_SSID;
@@ -235,7 +235,7 @@ void setup() {
 
   Log.trace("MAC: %x", WiFi.macAddress());
 
-  g_cfg->loadConfig();
+  //g_cfg->loadConfig();
 
   // FILE
   File file = SPIFFS.open("/config.json", FILE_WRITE);

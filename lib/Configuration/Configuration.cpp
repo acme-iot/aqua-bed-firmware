@@ -2,7 +2,11 @@
 
 AQUABOTICS_BEGIN_NAMESPACE
 
-Configuration::Configuration() {}
+const String ConfigurationFile = "/fs/config.json";
+
+Configuration::Configuration() {
+    fs.begin();
+}
 
 Configuration::Configuration(const Configuration &orig) {}
 
