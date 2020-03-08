@@ -215,7 +215,7 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  Log.trace("MAC: %x", WiFi.macAddress());
+  Log.trace("MAC: %x", WiFi.macAddress().c_str());
 
   //g_cfg->loadConfig();
 

@@ -15,10 +15,10 @@ FileSystem::~FileSystem() {
 
 void FileSystem::begin() {
     if(!SPIFFS.begin(true)){
-        Serial.println("SPIFFS Mount Failed");
+        Log.error("Unable to mount SPIFFS");
         return;
     }
-    Serial.println("SPIFFS Mounted");
+    Log.trace("File system mounted");
 }
 
 void FileSystem::listDir(fs::FS &fs, const char * dirname, uint8_t levels){

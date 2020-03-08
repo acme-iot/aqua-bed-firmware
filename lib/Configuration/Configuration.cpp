@@ -6,6 +6,7 @@ const String ConfigurationFile = "/fs/config.json";
 
 Configuration::Configuration() {
     fs.begin();
+    fs.
 }
 
 Configuration::Configuration(const Configuration &orig) {}
