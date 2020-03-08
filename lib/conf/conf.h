@@ -1,5 +1,5 @@
-#ifndef ESP_LIB_CONFIG_H
-#define ESP_LIB_CONFIG_H
+#ifndef CONFIG_H_
+#define CONFIG_H_ 1
 
 #include "SPIFFSAccess.h"
 #include "ArduinoJson.h"
