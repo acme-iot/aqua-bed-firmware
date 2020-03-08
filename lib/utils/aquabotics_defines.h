@@ -6,5 +6,6 @@
 #define AQUABOTICS_BEGIN_NAMESPACE namespace aquabotics {
 #define AQUABOTICS_END_NAMESPACE  }
 #define AQUABOTICS_NAMESPACE aquabotics::
+#define AQUABOTICS_USING using aquabotics;
 
 #endif

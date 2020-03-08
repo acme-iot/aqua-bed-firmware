@@ -25,8 +25,7 @@
 #include <conf.h>
 #include <mqtt.h>
 //#include <jsoninfo.h>
-#include <webapi.h>
-#include <SPIFFSAccess.h>
+//#include <webapi.h>
 
 #else
 // remove since 8266 wont be supported
@@ -60,7 +59,7 @@ extern "C"
 const int BaudRate = 115200;
 
 Config *g_cfg;
-SPIFFSAccess *g_file;
+aquabotics::FileSystem *g_file;
 
 const char *ssid = SECRET_SSID;
 const char *password = SECRET_PASSWORD;
