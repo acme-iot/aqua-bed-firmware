@@ -1,37 +1,19 @@
 /*
  * Aquaponic planter firmware
  */
-#include <aquabotics_defines.h>
+#include <Arduino.h>
 
-#include <FileSystem.h>
-#include <Configuration.h>
+#include <WiFi.h>
+#include <WiFiType.h>
+#include <TimeLib.h>
 
 #include <chrono>
 #include <ctime>
 #include <string>
-
 #include <cassert>
 
-#include <TimeLib.h>
-
-#ifdef ESP32
-#include <WiFi.h>
-#include <WiFiType.h>
-
-#include <Arduino.h>
-//#include <Hash.h>
-//#include <FS.h>
-
-//#include "wifi.h"
-//#include <conf.h>
-#include <mqtt.h>
-//#include <jsoninfo.h>
-//#include <webapi.h>
-
-#else
-// remove since 8266 wont be supported
-#include <ESP8266WiFi.h>
-#endif
+#include <FileSystem.h>
+#include <Configuration.h>
 
 #ifndef CI_BUILD
 #include "secrets.h"
@@ -70,7 +52,7 @@ const char *mqtt_password = SECRET_MQTT_PASSWORD;
 #define MQTT_PORT 1883
 #define MQTT_HOST IPAddress(54, 70, 96, 251)
 
-AsyncMqttClient mqttClient;
+AsyncMqttClient asyncMqttClient;
 TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
 TimerHandle_t timeTimer;
@@ -78,12 +60,12 @@ TimerHandle_t timeTimer;
 void connectToWifi() {
   Log.trace("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
-  Log.trace("IP address: %s", WiFi.localIP());
+  Log.trace("IP address: %s", WiFi.localIP().toString().c_str());
 }
 
 void connectToMqtt() {
   Log.trace("Connecting to MQTT...");
-  mqttClient.connect();
+  asyncMqttClient.connect();
 }
 
 void syncTimeCallback() {
@@ -111,15 +93,15 @@ void onMqttConnect(bool sessionPresent) {
   Serial.println("Connected to MQTT.");
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
-  uint16_t packetIdSub = mqttClient.subscribe("test/lol", 2);
+  uint16_t packetIdSub = asyncMqttClient.subscribe("test/lol", 2);
   Serial.print("Subscribing at QoS 2, packetId: ");
   Serial.println(packetIdSub);
-  mqttClient.publish("test/lol", 0, true, "test 1");
+  asyncMqttClient.publish("test/lol", 0, true, "test 1");
   Serial.println("Publishing at QoS 0");
-  uint16_t packetIdPub1 = mqttClient.publish("test/lol", 1, true, "test 2");
+  uint16_t packetIdPub1 = asyncMqttClient.publish("test/lol", 1, true, "test 2");
   Serial.print("Publishing at QoS 1, packetId: ");
   Serial.println(packetIdPub1);
-  uint16_t packetIdPub2 = mqttClient.publish("test/lol", 2, true, "test 3");
+  uint16_t packetIdPub2 = asyncMqttClient.publish("test/lol", 2, true, "test 3");
   Serial.print("Publishing at QoS 2, packetId: ");
   Serial.println(packetIdPub2);
 }
@@ -254,7 +236,7 @@ void setup() {
   file.close();
 
   file = SPIFFS.open("/config.json", FILE_READ);
-  Log.verbose("config.json %s", file.readString());
+  Log.verbose("config.json %s", file.readString().c_str());
   file.close();
   // END FILE
 
@@ -278,14 +260,14 @@ void setup() {
 
   WiFi.onEvent(WiFiEvent);
 
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.onSubscribe(onMqttSubscribe);
-  mqttClient.onUnsubscribe(onMqttUnsubscribe);
-  mqttClient.onMessage(onMqttMessage);
-  mqttClient.onPublish(onMqttPublish);
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  mqttClient.setCredentials(mqtt_username, mqtt_password);
+  asyncMqttClient.onConnect(onMqttConnect);
+  asyncMqttClient.onDisconnect(onMqttDisconnect);
+  asyncMqttClient.onSubscribe(onMqttSubscribe);
+  asyncMqttClient.onUnsubscribe(onMqttUnsubscribe);
+  asyncMqttClient.onMessage(onMqttMessage);
+  asyncMqttClient.onPublish(onMqttPublish);
+  asyncMqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  asyncMqttClient.setCredentials(mqtt_username, mqtt_password);
 
   connectToWifi();
 }
