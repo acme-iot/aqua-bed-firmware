@@ -80,4 +80,6 @@ This may not work on certain boards.
 
 ##### CLion
 
-https://docs.platformio.org/en/latest/ide/clion.html
+Follow these articles
+- https://docs.platformio.org/en/latest/ide/clion.html
+- https://community.platformio.org/t/official-platformio-plugin-for-jetbrains-clion-ide/10653
