@@ -1,6 +1,10 @@
 /*
  * Aquaponic planter firmware
  */
+#include <aquabotics_defines.h>
+
+#include <FileSystem.h>
+
 #include <chrono>
 #include <ctime>
 #include <string>
@@ -15,7 +19,7 @@
 
 #include <Arduino.h>
 //#include <Hash.h>
-#include <FS.h>
+//#include <FS.h>
 
 //#include "wifi.h"
 #include <conf.h>
@@ -246,7 +250,7 @@ void setup()
   g_cfg->loadConfig();
 
   // FILE
-  File file = SPIFFS.open("/config.json", FILE_WRITE);
+ File file = SPIFFS.open("/config.json", FILE_WRITE);
 
   if (!file)
   {
@@ -269,6 +273,10 @@ void setup()
   Log.verbose("config.json %s", file.readString());
   file.close();
   // END FILE
+
+  // FILESYSTEM
+
+  // END FILESYSTEM
 
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
