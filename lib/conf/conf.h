@@ -5,7 +5,6 @@
 #include "ArduinoJson.h"
 #include <ArduinoLog.h>
 
-//AQUABOTICS_USING
 
 #define config_default_json "{\"unit\":{\"name\":\"SHTech-R\"},\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{},\"plugins\":[]}"
 
@@ -17,7 +16,8 @@ class Config
         //StaticJsonBuffer<20000> jsonBuffer;
         StaticJsonDocument<20000> jsonBuffer;
         JsonObject /* * */ configuration;
-        aquabotics::FileSystem fs;
+        AQUABOTICS_NAMESPACE
+        FileSystem fs;
 
     public:
         Config() {
