@@ -74,47 +74,39 @@ TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
 TimerHandle_t timeTimer;
 
-void connectToWifi()
-{
+void connectToWifi() {
   Log.trace("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
   Log.trace("IP address: %s", WiFi.localIP());
 }
 
-void connectToMqtt()
-{
+void connectToMqtt() {
   Log.trace("Connecting to MQTT...");
   mqttClient.connect();
 }
 
-void syncTimeCallback()
-{
+void syncTimeCallback() {
   Log.trace("Connecting to NTP server...");
   return;
 }
 
-void WiFiEvent(WiFiEvent_t event)
-{
+void WiFiEvent(WiFiEvent_t event) {
   Serial.printf("[WiFi-event] event: %d\n", event);
-  switch (event)
-  {
-  case SYSTEM_EVENT_STA_GOT_IP:
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-    connectToMqtt();
-    //Serial.println(g_cfg->getConfig());
-    break;
-  case SYSTEM_EVENT_STA_DISCONNECTED:
-    Serial.println("WiFi lost connection");
-    xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
-    xTimerStart(wifiReconnectTimer, 0);
-    break;
+  switch (event) {
+    case SYSTEM_EVENT_STA_GOT_IP:Serial.println("WiFi connected");
+      Serial.println("IP address: ");
+      Serial.println(WiFi.localIP());
+      connectToMqtt();
+      //Serial.println(g_cfg->getConfig());
+      break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:Serial.println("WiFi lost connection");
+      xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
+      xTimerStart(wifiReconnectTimer, 0);
+      break;
   }
 }
 
-void onMqttConnect(bool sessionPresent)
-{
+void onMqttConnect(bool sessionPresent) {
   Serial.println("Connected to MQTT.");
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
@@ -131,18 +123,15 @@ void onMqttConnect(bool sessionPresent)
   Serial.println(packetIdPub2);
 }
 
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
-{
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println("Disconnected from MQTT.");
 
-  if (WiFi.isConnected())
-  {
+  if (WiFi.isConnected()) {
     xTimerStart(mqttReconnectTimer, 0);
   }
 }
 
-void onMqttSubscribe(uint16_t packetId, uint8_t qos)
-{
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
   Serial.println("Subscribe acknowledged.");
   Serial.print("  packetId: ");
   Serial.println(packetId);
@@ -150,15 +139,18 @@ void onMqttSubscribe(uint16_t packetId, uint8_t qos)
   Serial.println(qos);
 }
 
-void onMqttUnsubscribe(uint16_t packetId)
-{
+void onMqttUnsubscribe(uint16_t packetId) {
   Serial.println("Unsubscribe acknowledged.");
   Serial.print("  packetId: ");
   Serial.println(packetId);
 }
 
-void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
-{
+void onMqttMessage(char *topic,
+                   char *payload,
+                   AsyncMqttClientMessageProperties properties,
+                   size_t len,
+                   size_t index,
+                   size_t total) {
   digitalWrite(LED_BUILTIN, HIGH);
 
   Serial.println("Publish received.");
@@ -180,32 +172,27 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
   Serial.println(payload);
 }
 
-void onMqttPublish(uint16_t packetId)
-{
+void onMqttPublish(uint16_t packetId) {
   Serial.println("Publish acknowledged.");
   Serial.print("  packetId: ");
   Serial.println(packetId);
 }
 
-void preInitialize()
-{
+void preInitialize() {
   // assert all that is required
   assert(Serial);
 
   // init Serial
   Serial.begin(BaudRate);
-  while (!Serial && !Serial.available())
-  {
+  while (!Serial && !Serial.available()) {
   }
 }
 
-void setupDebugging()
-{
+void setupDebugging() {
   Serial.setDebugOutput(true);
 }
 
-void setupLogging()
-{
+void setupLogging() {
   auto getFormattedTime = [](Print *p) {
     auto now = std::chrono::high_resolution_clock::now();
     auto time = std::chrono::high_resolution_clock::to_time_t(now);
@@ -221,13 +208,11 @@ void setupLogging()
   Log.setSuffix([](Print *p) { p->print("\n"); });
 }
 
-void setupFileSystem()
-{
+void setupFileSystem() {
   g_file->begin();
 }
 
-void setup()
-{
+void setup() {
   preInitialize();
   setupDebugging();
   setupLogging();
@@ -235,10 +220,13 @@ void setup()
 
   Log.notice("Running...");
 
-  timeTimer = xTimerCreate("timeTimer", pdMS_TO_TICKS(5 * 1000), pdTRUE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(syncTimeCallback));
+  timeTimer = xTimerCreate("timeTimer",
+                           pdMS_TO_TICKS(5*1000),
+                           pdTRUE,
+                           (void *) 0,
+                           reinterpret_cast<TimerCallbackFunction_t>(syncTimeCallback));
 
-  if (xTimerStart(timeTimer, 0) != pdPASS)
-  {
+  if (xTimerStart(timeTimer, 0)!=pdPASS) {
     Log.error("Time timer failed.");
   }
 
@@ -249,20 +237,16 @@ void setup()
   g_cfg->loadConfig();
 
   // FILE
- File file = SPIFFS.open("/config.json", FILE_WRITE);
+  File file = SPIFFS.open("/config.json", FILE_WRITE);
 
-  if (!file)
-  {
+  if (!file) {
     Log.error("There was an error opening the file for writing");
     return;
   }
 
-  if (file.print("TEST"))
-  {
+  if (file.print("TEST")) {
     Log.trace("File was written");
-  }
-  else
-  {
+  } else {
     Log.error("File write failed");
   }
 
@@ -277,8 +261,16 @@ void setup()
 
   // END FILESYSTEM
 
-  mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
-  wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
+  mqttReconnectTimer = xTimerCreate("mqttTimer",
+                                    pdMS_TO_TICKS(2000),
+                                    pdFALSE,
+                                    (void *) 0,
+                                    reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
+  wifiReconnectTimer = xTimerCreate("wifiTimer",
+                                    pdMS_TO_TICKS(2000),
+                                    pdFALSE,
+                                    (void *) 0,
+                                    reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
 
   WiFi.onEvent(WiFiEvent);
 
@@ -294,8 +286,7 @@ void setup()
   connectToWifi();
 }
 
-void loop()
-{
+void loop() {
   delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
 }
