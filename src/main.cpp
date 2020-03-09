@@ -1,6 +1,8 @@
 /*
  * Aquaponic planter firmware
  */
+#include <fakes.h> // remove
+
 #include <Arduino.h>
 
 #include <WiFi.h>
@@ -41,8 +43,6 @@ extern "C"
 
 const int BaudRate = 115200;
 
-//Config *g_cfg;
-aquabotics::FileSystem *g_file;
 
 const char *ssid = SECRET_SSID;
 const char *password = SECRET_PASSWORD;
@@ -52,6 +52,7 @@ const char *mqtt_password = SECRET_MQTT_PASSWORD;
 #define MQTT_PORT 1883
 #define MQTT_HOST IPAddress(54, 70, 96, 251)
 
+aquabotics::Configuration configuration{};
 AsyncMqttClient asyncMqttClient;
 TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
@@ -192,7 +193,7 @@ void setupLogging() {
 }
 
 void setupFileSystem() {
-  g_file->begin();
+  configuration.begin();
 }
 
 void setup() {
@@ -238,6 +239,13 @@ void setup() {
   file = SPIFFS.open("/config.json", FILE_READ);
   Log.verbose("config.json %s", file.readString().c_str());
   file.close();
+
+  SPIFFS.remove("/config.json");
+
+  if (SPIFFS.exists("/config.json")) {
+
+    Log.trace("Exists");
+  }
   // END FILE
 
   // FILESYSTEM

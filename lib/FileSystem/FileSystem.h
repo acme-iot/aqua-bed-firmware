@@ -11,22 +11,24 @@
 
 AQUABOTICS_BEGIN_NAMESPACE
 
-class FileSystem
-{
-public:
-    void begin();
-    void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
-    String read_file(const char *path);
-    String readWholeFile(fs::FS &fs, const char *path);
-    void writeFile(fs::FS &fs, const char *path, const char *message);
-    void appendFile(fs::FS &fs, const char *path, const char *message);
-    void renameFile(fs::FS &fs, const char *path1, const char *path2);
-    void deleteFile(fs::FS &fs, const char *path);
-    int deleteFileWithPrefix(const char *_Prefix);
-    void testFileIO(fs::FS &fs, const char *path);
-    FileSystem();
-    FileSystem(const FileSystem &orig);
-    virtual ~FileSystem();
+class FileSystem {
+ private:
+  bool isInitialized;
+  void handleInitialized(bool initialized);
+  void write(const char *path, const char *contents, bool append = false);
+
+ public:
+  void begin();
+  void deleteDir(const char *path);
+  void createDir(const char *path);
+  String readFile(const char *path);
+  void writeFile(const char *path, const char *content);
+  bool existsFile(const char *path);
+  void renameFile(const char *original, const char *destination);
+  void deleteFile(const char *path);
+  FileSystem();
+  FileSystem(const FileSystem &orig);
+  virtual ~FileSystem();
 };
 
 AQUABOTICS_END_NAMESPACE

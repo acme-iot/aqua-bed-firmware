@@ -2,15 +2,20 @@
 
 AQUABOTICS_BEGIN_NAMESPACE
 
-const String ConfigurationFile = "/fs/config.json";
+const String ConfigurationFile = "/config.json";
 
-Configuration::Configuration() {
-    fs.begin();
-    fs.
-}
+Configuration::Configuration() {}
 
 Configuration::Configuration(const Configuration &orig) {}
 
 Configuration::~Configuration() {}
+
+void Configuration::begin() {
+  fs.begin();
+}
+
+void Configuration::load(String doc) {
+
+}
 
 AQUABOTICS_END_NAMESPACE
