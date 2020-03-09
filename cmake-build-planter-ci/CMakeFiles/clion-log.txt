@@ -1,0 +1,4 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=planter-ci -G "CodeBlocks - Unix Makefiles" /Users/tmillar/dev/repo/acme-iot/aqua-bed-firmware
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/tmillar/dev/repo/acme-iot/aqua-bed-firmware/cmake-build-planter-ci

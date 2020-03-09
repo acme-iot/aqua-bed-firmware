@@ -65,3 +65,21 @@ platform_packages =
 ##### stuck?
 - https://community.platformio.org/t/how-to-install-a-newer-toolchain-than-the-official-one/8238
 - https://community.platformio.org/t/can-not-compile-arm-none-eabi-g-command-not-found/9458/14
+
+
+### SPIFFS
+
+##### initialize
+
+This may not work on certain boards.
+
+1. Add all files to upload into `data` folder
+2. then run `pio run -t uploadfs`
+
+### IDEs
+
+##### CLion
+
+Follow these articles
+- https://docs.platformio.org/en/latest/ide/clion.html
+- https://community.platformio.org/t/official-platformio-plugin-for-jetbrains-clion-ide/10653
