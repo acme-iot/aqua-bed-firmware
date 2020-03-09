@@ -54,9 +54,12 @@ const char *mqtt_password = SECRET_MQTT_PASSWORD;
 
 aquabotics::Configuration configuration{};
 AsyncMqttClient asyncMqttClient;
+
+// Timers
 TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
 TimerHandle_t timeTimer;
+TimerHandle_t configurationTimer;
 
 void connectToWifi() {
   Log.trace("Connecting to Wi-Fi...");
@@ -192,8 +195,44 @@ void setupLogging() {
   Log.setSuffix([](Print *p) { p->print("\n"); });
 }
 
+void syncConfigurationCallback() {
+  Log.trace("Fetching configuration from gateway...");
+
+  // does config.json exist?
+    // no
+      // gateway request
+      // save response in config.json
+      // refresh settings
+    // yes
+      // compare crc16 between response & local file
+        // same
+          // EXIT
+        // different
+          // update and save local config
+          // refresh settings
+            // refresh mqtt
+          // EXIT
+  return;
+}
+
 void setupFileSystem() {
+  Log.trace("setting up file system");
+  aquabotics::FileSystem fs{};
+  fs.begin();
+
+  Log.trace("setting up configuration");
   configuration.begin();
+
+  Log.trace("starting refresh configuration timer");
+  configurationTimer = xTimerCreate("configurationTimer",
+                           pdMS_TO_TICKS(5*1000),
+                           pdTRUE,
+                           (void *) 0,
+                           reinterpret_cast<TimerCallbackFunction_t>(syncConfigurationCallback));
+
+  if (xTimerStart(configurationTimer, 0)!=pdPASS) {
+    Log.fatal("Configuration timer failed.");
+  }
 }
 
 void setup() {
@@ -221,7 +260,7 @@ void setup() {
   //g_cfg->loadConfig();
 
   // FILE
-  File file = SPIFFS.open("/config.json", FILE_WRITE);
+  /*File file = SPIFFS.open("/config.json", FILE_WRITE);
 
   if (!file) {
     Log.error("There was an error opening the file for writing");
@@ -245,7 +284,7 @@ void setup() {
   if (SPIFFS.exists("/config.json")) {
 
     Log.trace("Exists");
-  }
+  }*/
   // END FILE
 
   // FILESYSTEM
