@@ -85,7 +85,7 @@ void FileSystem::createDir(const char *path) {
   Log.trace("directory created");
 }
 
-String FileSystem::readFile(const char *path) {
+std::optional<String> FileSystem::readFile(const char *path) {
   Log.trace("attempting to read, %s", path);
 
   IS_INITED
@@ -94,10 +94,10 @@ String FileSystem::readFile(const char *path) {
 
   if (!file) {
     Log.error("file, %s does not exist or could not be read", path);
-    return "";
+    return std::nullopt;
   } else if (file.isDirectory()) {
     Log.error("path, %s is a directory", path);
-    return "";
+    return std::nullopt;
   }
 
   auto content = file.readString();

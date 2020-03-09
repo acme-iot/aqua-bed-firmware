@@ -43,7 +43,6 @@ extern "C"
 
 const int BaudRate = 115200;
 
-
 const char *ssid = SECRET_SSID;
 const char *password = SECRET_PASSWORD;
 const char *mqtt_username = SECRET_MQTT_USERNAME;
@@ -53,6 +52,7 @@ const char *mqtt_password = SECRET_MQTT_PASSWORD;
 #define MQTT_HOST IPAddress(54, 70, 96, 251)
 
 aquabotics::Configuration configuration{};
+aquabotics::FileSystem fileSystem{};
 AsyncMqttClient asyncMqttClient;
 
 // Timers
@@ -74,6 +74,7 @@ void connectToMqtt() {
 
 void syncTimeCallback() {
   Log.trace("Connecting to NTP server...");
+  Log.trace("%s:%i", configuration.getMqttIp().c_str(), configuration.getMqttPort());
   return;
 }
 
@@ -198,37 +199,46 @@ void setupLogging() {
 void syncConfigurationCallback() {
   Log.trace("Fetching configuration from gateway...");
 
-  // does config.json exist?
-    // no
-      // gateway request
-      // save response in config.json
-      // refresh settings
-    // yes
-      // compare crc16 between response & local file
-        // same
-          // EXIT
-        // different
-          // update and save local config
-          // refresh settings
-            // refresh mqtt
-          // EXIT
-  return;
+  // http request to gateway
+  String response = CONFIG_JSON_RESPONSE;
+  try {
+    configuration.load(response);
+  } catch (std::exception& e) {
+    Log.error("failed to load json, %s", e.what());
+    return;
+  }
+
+  if (configuration.hasChanged(true)) {
+    // refresh settings
+    // refresh mqtt
+  }
+}
+
+void loadConfiguration() {
+  Log.notice("loading saved configuration");
+  configuration.load();
+
+  if (configuration.hasInitialized()) {
+    return;
+  }
+
+  //fetch from gateway
+  syncConfigurationCallback();
 }
 
 void setupFileSystem() {
   Log.trace("setting up file system");
-  aquabotics::FileSystem fs{};
-  fs.begin();
+  fileSystem.begin();
 
   Log.trace("setting up configuration");
   configuration.begin();
 
   Log.trace("starting refresh configuration timer");
   configurationTimer = xTimerCreate("configurationTimer",
-                           pdMS_TO_TICKS(5*1000),
-                           pdTRUE,
-                           (void *) 0,
-                           reinterpret_cast<TimerCallbackFunction_t>(syncConfigurationCallback));
+                                    pdMS_TO_TICKS(5*1000),
+                                    pdTRUE,
+                                    (void *) 0,
+                                    reinterpret_cast<TimerCallbackFunction_t>(syncConfigurationCallback));
 
   if (xTimerStart(configurationTimer, 0)!=pdPASS) {
     Log.fatal("Configuration timer failed.");
@@ -240,6 +250,8 @@ void setup() {
   setupDebugging();
   setupLogging();
   setupFileSystem();
+
+  loadConfiguration();
 
   Log.notice("Running...");
 

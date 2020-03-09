@@ -6,6 +6,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 
+#include <optional>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,7 +22,7 @@ class FileSystem {
   void begin();
   void deleteDir(const char *path);
   void createDir(const char *path);
-  String readFile(const char *path);
+  std::optional<String> readFile(const char *path);
   void writeFile(const char *path, const char *content);
   bool existsFile(const char *path);
   void renameFile(const char *original, const char *destination);
