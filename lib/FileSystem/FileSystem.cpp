@@ -112,6 +112,7 @@ void FileSystem::writeFile(const char *path, const char *content) {
 }
 
 bool FileSystem::existsFile(const char *path) {
+  Log.trace("begin::existsFile");
   Log.trace("checking if %s exists", path);
 
   IS_INITED

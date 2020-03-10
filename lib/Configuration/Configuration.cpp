@@ -31,17 +31,30 @@ void Configuration::begin() {
  * @throws std::runtime_error if the JSON string could not be deserialized
  */
 void Configuration::load(String json) {
-  DynamicJsonDocument doc(1024);
+  Log.trace("begin::load(string)");
+  DynamicJsonDocument doc(256);
   auto error = deserializeJson(doc, json.c_str());
 
+  Log.trace("load(string):finished rehydrating json");
+
   if (error) {
+    Log.trace("load(string):error rehydrating json");
     throw std::runtime_error(error.c_str());
   }
 
+  Log.trace("load(string):begin cast document to JsonObject");
   auto jsonObject = doc.as<JsonObject>();
+  Log.trace("load(string):finished cast document to JsonObject");
 
   // refresh settings
-  this->refresh(jsonObject);
+  Log.trace("load(string):begin refresh");
+  try {
+    this->refresh(jsonObject);
+  } catch (std::exception& e) {
+    Log.error("unable to refresh configuration, %s", e.what());
+    return;
+  }
+  Log.trace("load(string):end refresh");
 
   // save response in config.json
   String cleanJson;
@@ -50,6 +63,7 @@ void Configuration::load(String json) {
 }
 
 void Configuration::load() {
+  Log.trace("begin::load");
   if (!fs.existsFile(ConfigurationFile.c_str())) {
     return;
   }
@@ -66,6 +80,7 @@ void Configuration::load() {
  * @throws std::runtime_error if any expected keys are missing
  */
 void Configuration::refresh(JsonObject object) {
+  Log.trace("begin::refresh");
 
   if (!object.containsKey(KeyId)) {
     throw std::runtime_error(("missing key " + KeyId).c_str());
@@ -109,10 +124,12 @@ void Configuration::refresh(JsonObject object) {
 }
 
 bool Configuration::hasInitialized() {
+  Log.trace("begin::hasInitialized");
   return initialized;
 }
 
 bool Configuration::hasChanged(bool reset) {
+  Log.trace("begin::hasChanged");
   auto temp = changed;
 
   if (reset) {
@@ -123,11 +140,13 @@ bool Configuration::hasChanged(bool reset) {
 }
 
 void Configuration::setId(String value) {
+  Log.trace("begin::setMqttId");
   if (value.isEmpty()) {
     throw std::runtime_error("ID can't be empty");
   }
 
   if (id==value) {
+    Log.trace("begin::setId value hasn't changed");
     return;
   }
 
@@ -136,11 +155,13 @@ void Configuration::setId(String value) {
 }
 
 void Configuration::setMqttIp(String value) {
+  Log.trace("begin::setMqttIp");
   if (value.isEmpty()) {
     throw std::runtime_error("MQTT IP can't be empty");
   }
 
   if (mqttIp==value) {
+    Log.trace("begin::setMqttIp value hasn't changed");
     return;
   }
 
@@ -149,11 +170,13 @@ void Configuration::setMqttIp(String value) {
 }
 
 void Configuration::setMqttPort(uint16_t value) {
+  Log.trace("begin::setMqttPort");
   if (value==0) {
     throw std::runtime_error("MQTT port can't be empty");
   }
 
   if (mqttPort==value) {
+    Log.trace("begin::setMqttPort value hasn't changed");
     return;
   }
 
@@ -162,7 +185,10 @@ void Configuration::setMqttPort(uint16_t value) {
 }
 
 void Configuration::setMqttUsername(String value) {
+  Log.trace("begin::setMqttUsername");
+
   if (mqttUsername==value) {
+    Log.trace("begin::setMqttUsername value hasn't changed");
     return;
   }
 
@@ -171,7 +197,10 @@ void Configuration::setMqttUsername(String value) {
 }
 
 void Configuration::setMqttPassword(String value) {
+  Log.trace("begin::setMqttPassword");
+
   if (mqttPassword==value) {
+    Log.trace("begin::setMqttPassword value hasn't changed");
     return;
   }
 
