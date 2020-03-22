@@ -37,8 +37,10 @@ extern "C"
 
 #ifdef RELEASE
 #define LOG_LEVEL LOG_LEVEL_SILENT
+#define HACK_MODE false
 #else
 #define LOG_LEVEL LOG_LEVEL_VERBOSE
+#define HACK_MODE true
 #endif
 
 const int BaudRate = 115200;
@@ -62,14 +64,38 @@ TimerHandle_t timeTimer;
 TimerHandle_t configurationTimer;
 
 void connectToWifi() {
-  Log.trace("Connecting to Wi-Fi...");
+  Log.trace("connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
-  Log.trace("IP address: %s", WiFi.localIP().toString().c_str());
 }
 
 void connectToMqtt() {
   Log.trace("Connecting to MQTT...");
+
+  auto mqttHost = IPAddress();
+  mqttHost.fromString(configuration.getMqttIp());
+  asyncMqttClient.setServer(/*MQTT_HOST*/mqttHost, /*MQTT_PORT*/configuration.getMqttPort());
+  asyncMqttClient.setCredentials(configuration.getMqttUsername().c_str(), configuration.getMqttPassword().c_str());
+
   asyncMqttClient.connect();
+}
+
+void requestGatewayConfiguration() {
+  Log.trace("Fetching configuration from gateway...");
+
+  // http request to gateway
+  String response = CONFIG_JSON_RESPONSE;
+
+  try {
+    configuration.load(response);
+  } catch (std::exception &e) {
+    Log.error("failed to load json, %s", e.what());
+    throw e;
+  }
+
+  if (configuration.hasChanged(true)) {
+    // refresh settings
+    // refresh mqtt
+  }
 }
 
 void syncTimeCallback() {
@@ -78,34 +104,18 @@ void syncTimeCallback() {
   return;
 }
 
-void WiFiEvent(WiFiEvent_t event) {
-  Serial.printf("[WiFi-event] event: %d\n", event);
-  switch (event) {
-    case SYSTEM_EVENT_STA_GOT_IP:Serial.println("WiFi connected");
-      Serial.println("IP address: ");
-      Serial.println(WiFi.localIP());
-      connectToMqtt();
-      //Serial.println(g_cfg->getConfig());
-      break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:Serial.println("WiFi lost connection");
-      xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
-      xTimerStart(wifiReconnectTimer, 0);
-      break;
-  }
-}
-
 void onMqttConnect(bool sessionPresent) {
   Serial.println("Connected to MQTT.");
-  Serial.print("Session present: ");
-  Serial.println(sessionPresent);
+  //Serial.print("Session present: ");
+  //Serial.println(sessionPresent);
   uint16_t packetIdSub = asyncMqttClient.subscribe("test/lol", 2);
-  Serial.print("Subscribing at QoS 2, packetId: ");
-  Serial.println(packetIdSub);
+  //Serial.print("Subscribing at QoS 2, packetId: ");
+  //Serial.println(packetIdSub);
   asyncMqttClient.publish("test/lol", 0, true, "test 1");
-  Serial.println("Publishing at QoS 0");
+  //Serial.println("Publishing at QoS 0");
   uint16_t packetIdPub1 = asyncMqttClient.publish("test/lol", 1, true, "test 2");
-  Serial.print("Publishing at QoS 1, packetId: ");
-  Serial.println(packetIdPub1);
+  //Serial.print("Publishing at QoS 1, packetId: ");
+  //Serial.println(packetIdPub1);
   uint16_t packetIdPub2 = asyncMqttClient.publish("test/lol", 2, true, "test 3");
   Serial.print("Publishing at QoS 2, packetId: ");
   Serial.println(packetIdPub2);
@@ -196,25 +206,7 @@ void setupLogging() {
   Log.setSuffix([](Print *p) { p->print("\n"); });
 }
 
-void syncConfigurationCallback() {
-  Log.trace("Fetching configuration from gateway...");
-
-  // http request to gateway
-  String response = CONFIG_JSON_RESPONSE;
-  try {
-    configuration.load(response);
-  } catch (std::exception& e) {
-    Log.error("failed to load json, %s", e.what());
-    return;
-  }
-
-  if (configuration.hasChanged(true)) {
-    // refresh settings
-    // refresh mqtt
-  }
-}
-
-void loadConfiguration() {
+/*void loadConfiguration() {
   Log.notice("loading saved configuration");
   configuration.load();
 
@@ -223,8 +215,8 @@ void loadConfiguration() {
   }
 
   //fetch from gateway
-  syncConfigurationCallback();
-}
+  //requestGatewayConfiguration();
+}*/
 
 void setupFileSystem() {
   Log.trace("setting up file system");
@@ -233,16 +225,153 @@ void setupFileSystem() {
   Log.trace("setting up configuration");
   configuration.begin();
 
-  Log.trace("starting refresh configuration timer");
-  configurationTimer = xTimerCreate("configurationTimer",
-                                    pdMS_TO_TICKS(5*1000),
-                                    pdTRUE,
+  //Log.trace("starting refresh configuration timer");
+  /*configurationTimer = xTimerCreate("configurationTimer",
+                                    pdMS_TO_TICKS(10*1000),
+                                    pdFALSE,
                                     (void *) 0,
-                                    reinterpret_cast<TimerCallbackFunction_t>(syncConfigurationCallback));
+                                    reinterpret_cast<TimerCallbackFunction_t>(requestGatewayConfiguration));*/
 
-  if (xTimerStart(configurationTimer, 0)!=pdPASS) {
+  /*if (xTimerStart(configurationTimer, 0)!=pdPASS) {
     Log.fatal("Configuration timer failed.");
+  }*/
+}
+
+void setupWiFi() {
+
+  auto handleEvents = [](WiFiEvent_t event) {
+    Serial.printf("[WiFi-event] event: %d\n", event);
+    switch (event) {
+      case SYSTEM_EVENT_STA_GOT_IP: {
+        Log.trace("wifi connected, %s", WiFi.localIP().toString().c_str());
+        requestGatewayConfiguration();
+        connectToMqtt();
+        break;
+      }
+      case SYSTEM_EVENT_STA_DISCONNECTED: {
+        Log.error("WiFi lost connection");
+        xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
+        xTimerStop(configurationTimer, 0);
+        xTimerStart(wifiReconnectTimer, 0);
+        break;
+      }
+      case SYSTEM_EVENT_WIFI_READY: {
+        Log.trace("SYSTEM_EVENT_WIFI_READY");
+        break;
+      }
+      case SYSTEM_EVENT_SCAN_DONE: {
+        Log.trace("SYSTEM_EVENT_SCAN_DONE");
+        break;
+      }
+      case SYSTEM_EVENT_STA_START: {
+        Log.trace("SYSTEM_EVENT_STA_START");
+        break;
+      }
+      case SYSTEM_EVENT_STA_STOP: {
+        Log.trace("SYSTEM_EVENT_STA_STOP");
+        break;
+      }
+      case SYSTEM_EVENT_STA_CONNECTED: {
+        Log.trace("SYSTEM_EVENT_STA_CONNECTED");
+        break;
+      }
+      case SYSTEM_EVENT_STA_AUTHMODE_CHANGE: {
+        Log.trace("SYSTEM_EVENT_STA_AUTHMODE_CHANGE");
+        break;
+      }
+      case SYSTEM_EVENT_STA_LOST_IP: {
+        Log.trace("SYSTEM_EVENT_STA_LOST_IP");
+        break;
+      }
+      case SYSTEM_EVENT_STA_WPS_ER_SUCCESS: {
+        Log.trace("SYSTEM_EVENT_STA_WPS_ER_SUCCESS");
+        break;
+      }
+      case SYSTEM_EVENT_STA_WPS_ER_FAILED: {
+        Log.trace("SYSTEM_EVENT_STA_WPS_ER_FAILED");
+        break;
+      }
+      case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT: {
+        Log.trace("SYSTEM_EVENT_STA_WPS_ER_TIMEOUT");
+        break;
+      }
+      case SYSTEM_EVENT_STA_WPS_ER_PIN: {
+        Log.trace("SYSTEM_EVENT_STA_WPS_ER_PIN");
+        break;
+      }
+      case SYSTEM_EVENT_STA_WPS_ER_PBC_OVERLAP: {
+        Log.trace("SYSTEM_EVENT_STA_WPS_ER_PBC_OVERLAP");
+        break;
+      }
+      case SYSTEM_EVENT_AP_START: {
+        Log.trace("SYSTEM_EVENT_AP_START");
+        break;
+      }
+      case SYSTEM_EVENT_AP_STOP: {
+        Log.trace("SYSTEM_EVENT_WIFI_READY");
+        break;
+      }
+      case SYSTEM_EVENT_AP_STACONNECTED: {
+        Log.trace("SYSTEM_EVENT_AP_STACONNECTED");
+        break;
+      }
+      case SYSTEM_EVENT_AP_STADISCONNECTED: {
+        Log.trace("SYSTEM_EVENT_AP_STADISCONNECTED");
+        break;
+      }
+      case SYSTEM_EVENT_AP_STAIPASSIGNED: {
+        Log.trace("SYSTEM_EVENT_AP_STAIPASSIGNED");
+        break;
+      }
+      case SYSTEM_EVENT_AP_PROBEREQRECVED: {
+        Log.trace("SYSTEM_EVENT_AP_PROBEREQRECVED");
+        break;
+      }
+      case SYSTEM_EVENT_GOT_IP6: {
+        Log.trace("SYSTEM_EVENT_GOT_IP6");
+        break;
+      }
+      case SYSTEM_EVENT_ETH_START:
+      case SYSTEM_EVENT_ETH_STOP:
+      case SYSTEM_EVENT_ETH_CONNECTED:
+      case SYSTEM_EVENT_ETH_DISCONNECTED:
+      case SYSTEM_EVENT_ETH_GOT_IP: {
+        Log.trace("SYSTEM_EVENT_ETH_*");
+        break;
+      }
+      case SYSTEM_EVENT_MAX: {
+        Log.trace("SYSTEM_EVENT_MAX");
+        break;
+      }
+    }
+  };
+
+  auto scanNetworks = [](String expectedSSID) {
+    Log.trace("scanNetworks::begin");
+    auto ssidCount = -1;
+    while (ssidCount = WiFi.scanNetworks(), ssidCount==-1) {
+      Log.error("scanNetworks::couldn't get a wifi connection");
+    }
+
+    Log.trace("scanNetworks::network count, %i", ssidCount);
+
+    for (auto i = 0; i < ssidCount; i++) {
+      Log.trace("scanNetworks::found %s (%idBm) %s", WiFi.SSID(i).c_str(), WiFi.RSSI(i), ""/*WiFi.encryptionType(i)*/);
+      if (WiFi.SSID(i)==expectedSSID) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  WiFi.onEvent(handleEvents);
+  while (!scanNetworks(ssid) && !HACK_MODE) {
+    Log.error("unable to locate SSID %s", ssid);
+    delay(1000);
   }
+
+  connectToWifi();
+
 }
 
 void setup() {
@@ -250,20 +379,24 @@ void setup() {
   setupDebugging();
   setupLogging();
   setupFileSystem();
+  setupWiFi();
 
-  loadConfiguration();
+  //fileSystem.deleteFile("/config.json");
+
+  //loadConfiguration();
 
   Log.notice("Running...");
 
-  timeTimer = xTimerCreate("timeTimer",
-                           pdMS_TO_TICKS(5*1000),
+  /*timeTimer = xTimerCreate("timeTimer",
+                           pdMS_TO_TICKS(30*1000),
                            pdTRUE,
                            (void *) 0,
                            reinterpret_cast<TimerCallbackFunction_t>(syncTimeCallback));
 
+
   if (xTimerStart(timeTimer, 0)!=pdPASS) {
     Log.error("Time timer failed.");
-  }
+  }*/
 
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -300,24 +433,25 @@ void setup() {
   // END FILE
 
   // FILESYSTEM
-
-  aquabotics::Configuration cfg{};
-
-
   // END FILESYSTEM
 
+  // Scan WiFi
+
+  //WiFi.scanNetworks()
+
+  // end Wifi
+
+
   mqttReconnectTimer = xTimerCreate("mqttTimer",
-                                    pdMS_TO_TICKS(2000),
+                                    pdMS_TO_TICKS(30*1000),
                                     pdFALSE,
                                     (void *) 0,
                                     reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer",
-                                    pdMS_TO_TICKS(2000),
+                                    pdMS_TO_TICKS(1*1000),
                                     pdFALSE,
                                     (void *) 0,
                                     reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
-
-  WiFi.onEvent(WiFiEvent);
 
   asyncMqttClient.onConnect(onMqttConnect);
   asyncMqttClient.onDisconnect(onMqttDisconnect);
@@ -325,8 +459,6 @@ void setup() {
   asyncMqttClient.onUnsubscribe(onMqttUnsubscribe);
   asyncMqttClient.onMessage(onMqttMessage);
   asyncMqttClient.onPublish(onMqttPublish);
-  asyncMqttClient.setServer(MQTT_HOST, MQTT_PORT);
-  asyncMqttClient.setCredentials(mqtt_username, mqtt_password);
 
   connectToWifi();
 }
