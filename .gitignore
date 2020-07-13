@@ -4,3 +4,4 @@
 include/secrets.h
 
 CMakeListsPrivate.txt
+cmake-build-*
